@@ -1,0 +1,125 @@
+#!/usr/bin/env python3
+
+from datetime import datetime, timedelta
+import logging
+import requests
+import sh
+from time import sleep
+
+import ephem
+
+from settings import settings
+
+
+def ping_and_switch(end_date, sleep_time=10):
+    """
+    Try pinging until end time
+    If succesful: Put on the lights.
+
+    Args:
+        datetime end_date: when to stop trying
+        sleep_time: nr of seconds to wait between tries.
+    """
+    while end_date > datetime.now():
+        try:
+            sh.ping('192.168.178.13', c=1)
+        except(sh.ErrorReturnCode_1):
+            continue
+        else:
+            if put_lights_on() is True:
+                return
+        sleep(sleep_time)
+
+
+def put_lights_on():
+    """
+    Put lights on via lifx api.lifx.
+
+    Returns:
+     Bool : was the request succesful.
+    """
+    logging.info('putting lights on')
+    headers = {
+        'Authorization': 'Bearer {}'.format(settings['token']),
+    }
+    req = requests.put(
+        'https://api.lifx.com/v1/lights/all/state?power=on&brightness={}'.
+        format(settings['brightness']),
+        headers=headers,
+    )
+    for light in req.json()['results']:
+        if light['status'] == 'ok':
+            logging.info('turned on {label}'.format(**light))
+        else:
+            logging.error(
+                '{label} failed with status: {status}'.format(**light))
+    return req.ok
+
+
+def next_hour(hour=17):
+    """
+    Return datetime with next occurence of hour.
+    """
+    date = datetime.now()
+    if date.hour >= hour:
+        date = date + timedelta(days=1)
+    end_date = date.replace(hour=hour, minute=0, second=0, microsecond=0)
+    return(end_date)
+
+
+def sleep_until_next():
+    end_date = next_hour()
+    logging.info('Sleeping until {}.'.format(end_date))
+    sleep((end_date - datetime.now()).seconds)
+
+
+class Sunset(object):
+    """
+    Store sunset date and whether it has already set.
+    sunset is considdered to be sooner by "margin(s)"
+    """
+    def __init__(self, lat='53:14', lon='6:33', margin=(60 * 60)):
+        """
+        use the ephem module to calculate the sunset.
+
+        """
+        obs = ephem.Observer()
+        obs.lat = lat
+        obs.lon = lon
+        sun = ephem.Sun()
+        now = datetime.now()
+        self.date = ephem.localtime(obs.next_setting(sun))
+        self.date = self.date - timedelta(seconds=margin)
+        # if the next setting is tomorrow, the sun has already set.
+        self.set = (self.date.day != now.day) or (self.date < now)
+        self.seconds_till_set = (self.date - now).seconds
+
+
+def main():
+    """
+    Permanent loop.
+    Will see if I'm home between 17-21.
+    Will turn lights on if that's the case.
+    If it is more than one hour till sunset,
+    will sleep till one hour before sunset.
+    """
+    while True:
+        sleep(10)  # to prevent running Amok.
+        date = datetime.now()
+        if date.hour in range(settings['start_h'], settings['end_h']):
+            sunset = Sunset(
+                lat=settings['lat'],
+                lon=settings['lon'],
+                margin=settings['sunset_margin']
+            )
+            if not sunset.set:
+                logging.info('there is still light')
+                logging.info('Sleeping until {}.'.format(
+                    sunset.date))
+                sleep(sunset.seconds_till_set)
+            ping_and_switch(end_date=next_hour(settings['end_h']))
+        sleep_until_next()
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
+    main()

@@ -1,0 +1,15 @@
+[Unit]
+Description=Put lights on when you're home
+After=network.target
+
+[Service]
+User=pi
+Group=pi
+Type=simple
+WorkingDirectory=/home/pi/lifx
+Restart=on-failure
+ExecStart=/home/pi/lifx/start.sh
+
+[Install]
+WantedBy=multi-user.target
+

@@ -1,0 +1,14 @@
+settings = {
+    # lifx api token.
+    'token': 'insert-token-here',
+    # brightness at which to switch the lights on.
+    'brightness': '0.5',
+    # h when to start checking if you're home.
+    'start_h': 17,
+    # h at which to stop checking.
+    'end_h': 21,
+    'lat': '53:14',
+    'lon': '6:33',
+    # seconds before actual sunset when you want the lights on.
+    'sunset_margin': (60 * 60),
+}
