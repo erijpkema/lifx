@@ -56,7 +56,7 @@ def put_lights_on():
     return req.ok
 
 
-def next_hour(hour=17):
+def next_hour(hour=settings['start_h']):
     """
     Return datetime with next occurence of hour.
     """
