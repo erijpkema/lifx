@@ -22,7 +22,7 @@ def ping_and_switch(end_date, sleep_time=10):
     """
     while end_date > datetime.now():
         try:
-            sh.ping('192.168.178.13', c=1)
+            sh.ping(settings['ping_device'], c=1)
         except(sh.ErrorReturnCode_1):
             continue
         else:
@@ -43,8 +43,8 @@ def put_lights_on():
         'Authorization': 'Bearer {}'.format(settings['token']),
     }
     req = requests.put(
-        'https://api.lifx.com/v1/lights/all/state?power=on&brightness={}'.
-        format(settings['brightness']),
+        'https://api.lifx.com/v1/lights/{selector}/state?power=on&brightness={br}'.
+        format(selector=settings['selector'],br=settings['brightness']),
         headers=headers,
     )
     for light in req.json()['results']:

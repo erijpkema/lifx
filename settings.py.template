@@ -1,6 +1,10 @@
 settings = {
+    # Ip of device to ping
+    'ping_device': '192.168.1.42',
     # lifx api token.
     'token': 'insert-token-here',
+    # selector to use.
+    'selector': 'all',
     # brightness at which to switch the lights on.
     'brightness': '0.5',
     # h when to start checking if you're home.
