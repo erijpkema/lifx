@@ -20,5 +20,5 @@ Installation
 
 * `pip install -r requirements.txt`
 
-* put the `lifx.service` file in `/etc/systemd/system` and enable it with `systemctl add lifx.service`
+* put the `lifx.service` file in `/etc/systemd/system` and enable it with `systemctl enable lifx.service`
   You should be able to confirm that it has started after running `journalctl /home/pi/lifx/start.sh`
