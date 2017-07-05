@@ -117,7 +117,9 @@ def main():
                 logging.info('Sleeping until {}.'.format(
                     sunset.date))
                 sleep(sunset.seconds_till_set)
-            ping_and_switch(end_date=next_hour(settings['end_h']))
+            date = datetime.now()
+            if date.hour < settings['end_h']:
+                ping_and_switch(end_date=next_hour(settings['end_h']))
         sleep_until_next()
 
 if __name__ == '__main__':
