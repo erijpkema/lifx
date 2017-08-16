@@ -11,6 +11,24 @@ import ephem
 from settings import settings
 
 
+def anibody_home(machines):
+    """
+    Ping each machine in machines.
+
+    Returns:
+       Bool: True if any machine returns ping.
+    """
+    for machine in machines:
+        try:
+            sh.ping(machine, c=1)
+        except(sh.ErrorReturnCode_1):
+            continue
+        else:
+            return True
+
+    return False
+
+
 def ping_and_switch(end_date, sleep_time=10):
     """
     Try pinging until end time
@@ -21,15 +39,11 @@ def ping_and_switch(end_date, sleep_time=10):
         sleep_time: nr of seconds to wait between tries.
     """
     while end_date > datetime.now():
-        try:
-            sh.ping(settings['ping_device'], c=1)
-        except(sh.ErrorReturnCode_1):
-            continue
-        else:
+        if anibody_home(settings['ping_devices']):
             if put_lights_on() is True:
                 return
-        sleep(sleep_time)
 
+        sleep(sleep_time)
 
 def put_lights_on():
     """
