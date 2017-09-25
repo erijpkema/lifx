@@ -7,6 +7,8 @@ settings = {
     'selector': 'all',
     # brightness at which to switch the lights on.
     'brightness': '0.5',
+    # duration of transition to power (seconds).
+    'duration': 300,
     # h when to start checking if you're home.
     'start_h': 17,
     # h at which to stop checking.
