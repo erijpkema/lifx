@@ -15,6 +15,9 @@ def anibody_home(machines):
     """
     Ping each machine in machines.
 
+    Args:
+       machines (list): list of machiens to ping.
+
     Returns:
        Bool: True if any machine returns ping.
     """
@@ -33,25 +36,36 @@ def ping_and_switch(end_date, sleep_time=10):
     """
     Try pinging until end time
     If succesful: Put on the lights.
+    Will turn on lights slowly if we're at home when pinging is succesful.
+    Will turn lights on fast if we arrive home later.
 
     Args:
         datetime end_date: when to stop trying
         sleep_time: nr of seconds to wait between tries.
     """
+    duration = settings['duration']
     while end_date > datetime.now():
         if anibody_home(settings['ping_devices']):
-            if put_lights_on() is True:
+            if put_lights_on(
+                    selector=settings['selector'],
+                    br=settings['brightness'],
+                    duration=duration) is True:
                 return
-
+        duration = 1
         sleep(sleep_time)
 
 
-def put_lights_on():
+def put_lights_on(**kwargs):
     """
     Put lights on via lifx api.lifx.
 
     Returns:
      Bool : was the request succesful.
+
+    Args:
+        selector (str): Which lights to turn on.
+        br (float): How bright to shine (0 - 1).
+        duration (int): length of transition to full brightness.
     """
     logging.info('putting lights on')
     headers = {
@@ -59,10 +73,7 @@ def put_lights_on():
     }
     req = requests.put(
         'https://api.lifx.com/v1/lights/{selector}/state?power=on&brightness={br}&duration={duration}'.
-        format(
-            selector=settings['selector'],
-            br=settings['brightness'],
-            duration=settings['duration']),
+        format(**kwargs),
         headers=headers, )
 
     for light in req.json()['results']:
@@ -139,6 +150,7 @@ def main():
             if date.hour < settings['end_h']:
                 ping_and_switch(end_date=next_hour(settings['end_h']))
         sleep_until_next()
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
